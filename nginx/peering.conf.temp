@@ -1,0 +1,17 @@
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name _;
+
+    ssl_certificate ${F_SERVER_CRT};
+    ssl_certificate_key ${F_SERVER_KEY};
+    ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+
+    ssl_client_certificate ${F_ROOT_CRT};
+    ssl_verify_client on;
+
+    location / {
+        root ${D_SHARE};
+        add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
+    }
+}

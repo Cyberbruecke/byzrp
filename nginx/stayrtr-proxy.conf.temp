@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    listen [::]:80;
+    server_name localhost;
+    location /${N_MASTER_VRP} {
+        root ${D_SHARE};
+        add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
+    }
+}
