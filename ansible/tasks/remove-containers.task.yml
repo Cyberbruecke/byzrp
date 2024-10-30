@@ -1,0 +1,5 @@
+---
+- name: Stop and remove Docker container
+  docker_container:
+    name: byzrp
+    state: absent

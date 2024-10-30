@@ -1,0 +1,9 @@
+---
+- name: Configure Docker log rotation
+  copy:
+    src: config/docker-daemon.json
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Docker

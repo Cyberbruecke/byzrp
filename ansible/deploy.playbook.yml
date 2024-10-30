@@ -1,0 +1,22 @@
+---
+- name: Prepare Deployment
+  hosts: localhost
+  tasks:
+    - import_tasks: tasks/docker-build.task.yml
+    - import_tasks: tasks/create-configs.task.yml
+    - import_tasks: tasks/create-certs.task.yml
+
+- name: Deploy ByzRP Nodes
+  hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - import_tasks: tasks/remove-containers.task.yml
+    - import_tasks: tasks/deploy-nodes.task.yml
+
+- name: Deploy Monitoring
+  hosts: mon
+  become: yes
+  become_method: sudo
+  tasks:
+    - import_tasks: tasks/deploy-monitoring.task.yml

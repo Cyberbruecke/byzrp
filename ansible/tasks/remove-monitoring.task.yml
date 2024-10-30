@@ -1,0 +1,5 @@
+---
+- name: Shutdown Docker Compose monitoring stack
+  community.docker.docker_compose_v2:
+    project_src: /opt/byzrp-mon/
+    state: absent

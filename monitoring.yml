@@ -1,0 +1,26 @@
+---
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - /opt/byzrp-mon/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /opt/byzrp-mon/root.crt:/etc/prometheus/certs/root.crt
+      - /opt/byzrp-mon/client.crt:/etc/prometheus/certs/client.crt
+      - /opt/byzrp-mon/client.key:/etc/prometheus/certs/client.key
+#
+#  grafana:
+#    image: grafana/grafana:latest
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - grafana_data:/var/lib/grafana
+#      - /opt/byzrp-mon/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+#    depends_on:
+#      - prometheus
+
+volumes:
+  prometheus_data:
+#  grafana_data:

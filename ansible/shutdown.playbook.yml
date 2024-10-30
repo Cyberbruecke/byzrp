@@ -1,0 +1,14 @@
+---
+- name: Shutdown ByzRP Nodes
+  hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - import_tasks: tasks/remove-containers.task.yml
+
+- name: Shutdown monitoring
+  hosts: mon
+  become: yes
+  become_method: sudo
+  tasks:
+    - import_tasks: tasks/remove-monitoring.task.yml

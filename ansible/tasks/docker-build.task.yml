@@ -1,0 +1,12 @@
+---
+- name: Ensure 'prep' directory
+  file:
+    path: prep
+    state: directory
+    mode: '0755'
+
+- name: Build Docker image
+  command: docker build -t byzrp ..
+
+- name: Save Docker image to file
+  command: docker save byzrp -o prep/byzrp.img

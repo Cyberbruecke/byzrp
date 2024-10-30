@@ -1,0 +1,17 @@
+---
+- name: Base Installation
+  hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - import_tasks: tasks/apt-update-upgrade.task.yml
+    - import_tasks: tasks/install-docker.task.yml
+    - import_tasks: tasks/configure-docker.task.yml
+    - import_tasks: tasks/install-docker-python.task.yml
+
+- name: Install Docker Compose
+  hosts: mon
+  become: yes
+  become_method: sudo
+  tasks:
+    - import_tasks: tasks/install-compose.task.yml

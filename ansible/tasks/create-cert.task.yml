@@ -1,0 +1,14 @@
+---
+- name: Generate key for {{ item }}
+  command: "openssl genrsa -out prep/{{ item }}.key"
+
+- name: Generate CSR for {{ item }}
+  command: "openssl req -new -key prep/{{ item }}.key -out prep/{{ item }}.csr -subj /C=DE/ST=Hessen/L=Darmstadt/O=ATHENE/OU=ATHENE/CN={{ item }} -addext 'subjectAltName = IP:{{ item }}'"
+
+- name: Sign certificate for {{ item }}
+  command: "openssl x509 -req -in prep/{{ item }}.csr -CA prep/root.crt -CAkey prep/root.key -CAcreateserial -out prep/{{ item }}.crt -days 365 -copy_extensions copy"
+
+- name: Clean up CSR file for {{ item }}
+  file:
+    path: "prep/{{ item }}.csr"
+    state: absent

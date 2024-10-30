@@ -1,0 +1,45 @@
+---
+- name: Ensure ByzRP directory
+  file:
+    path: /opt/byzrp-mon/
+    state: directory
+
+- name: Copy Prometheus config
+  copy:
+    src: prep/prometheus.yml
+    dest: /opt/byzrp-mon/prometheus.yml
+
+- name: Copy Grafana password file
+  copy:
+    src: prep/grafana.passwd
+    dest: /opt/byzrp-mon/grafana.passwd
+
+- name: Copy Grafana datasources config
+  copy:
+    src: ../prometheus/datasources.yml
+    dest: /opt/byzrp-mon/datasources.yml
+
+- name: Copy root certificate to nodes
+  copy:
+    src: "prep/root.crt"
+    dest: /opt/byzrp-mon/root.crt
+
+- name: Copy keys to nodes
+  copy:
+    src: "prep/{{ ansible_host }}.key"
+    dest: /opt/byzrp-mon/client.key
+
+- name: Copy certificates to nodes
+  copy:
+    src: "prep/{{ ansible_host }}.crt"
+    dest: /opt/byzrp-mon/client.crt
+
+- name: Copy Docker Compose file
+  copy:
+    src: ../monitoring.yml
+    dest: /opt/byzrp-mon/compose.yml
+
+- name: Deploy Docker Compose monitoring stack
+  community.docker.docker_compose_v2:
+    project_src: /opt/byzrp-mon/
+    state: present

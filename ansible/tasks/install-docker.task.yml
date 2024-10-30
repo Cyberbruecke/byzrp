@@ -1,0 +1,45 @@
+---
+- name: "Install Docker required packages"
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+    state: latest
+
+- name: "Ensure keyrings directory exists"
+  file:
+    path: /etc/apt/trusted.gpg.d
+    state: directory
+    mode: "0755"
+
+- name: "Check if Docker GPG key exists"
+  ansible.builtin.stat:
+    path: /etc/apt/trusted.gpg.d/docker.asc
+  register: docker_key
+
+- name: "Add Docker GPG apt key"
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/trusted.gpg.d/docker.asc
+    mode: "0644"
+  when: not docker_key.stat.exists
+
+- name: "Add Docker repository"
+  apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+    state: present
+
+- name: "Install Docker"
+  apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest

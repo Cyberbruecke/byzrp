@@ -1,0 +1,16 @@
+---
+- name: Extract peer list
+  shell: grep ansible_host hosts.yml | egrep -o "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" | sort | uniq
+  register: ip_addrs
+
+- name: Write peers.lst
+  copy:
+    content: "{{ ip_addrs.stdout }}"
+    dest: prep/peers.lst
+
+- name: Render Prometheus configuration
+  template:
+    src: ../prometheus/prometheus.yml.j2
+    dest: prep/prometheus.yml
+  vars:
+    ips: "{{ ip_addrs.stdout_lines }}"

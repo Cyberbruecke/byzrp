@@ -1,0 +1,18 @@
+---
+- name: Check for root certificate
+  stat:
+    path: prep/root.crt
+  register: root_crt_stat
+
+- name: Check for root key
+  stat:
+    path: prep/root.key
+  register: root_key_stat
+
+- name: Generate root key and certificate
+  when: not root_crt_stat.stat.exists or not root_key_stat.stat.exists
+  command: openssl req -x509 -newkey rsa:4096 -keyout prep/root.key -out prep/root.crt -sha256 -days 3650 -nodes -subj "/C=DE/ST=Hessen/L=Darmstadt/O=ATHENE/OU=ATHENE/CN=ByzRPRoot"
+
+- name: Generate peer keys and certificates
+  loop: "{{ ip_addrs.stdout_lines }}"
+  include_tasks: tasks/create-cert.task.yml

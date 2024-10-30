@@ -1,0 +1,18 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Upgrade all packages
+  apt:
+    name: "*"
+    state: latest
+
+- name: Remove unnecessary packages
+  apt:
+    autoremove: yes
+    purge: yes
+
+- name: Clean apt cache
+  apt:
+    autoclean: yes
