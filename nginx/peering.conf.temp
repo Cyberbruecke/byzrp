@@ -12,6 +12,6 @@ server {
 
     location / {
         root ${D_SHARE};
-        add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
+        add_header 'Cache-Control' 'public, max-age=0, must-revalidate';
     }
 }

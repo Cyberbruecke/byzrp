@@ -6,7 +6,7 @@ else
     N="$1"
 fi
 
-IMG=byz-rpki
+IMG=byzrp
 DATE=$(date +%Y-%m-%d_%H-%M)
 echo "preparing run_$DATE"
 mkdir run_$DATE

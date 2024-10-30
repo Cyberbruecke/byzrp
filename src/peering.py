@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from datetime import datetime
 from math import floor
@@ -8,15 +9,16 @@ from typing import Set, Iterable
 import requests
 from requests.exceptions import Timeout, ConnectionError, HTTPError, JSONDecodeError, SSLError, RequestException
 
-from utils import write_lines, write_json, read_lines, log, get_self_ip, RPKI_OBJTYPES
+from utils import write_lines, write_json, read_lines, log, get_host_ip, RPKI_OBJTYPES
 from vars import PEER_DISCOVERY, F_PEER_LIST, CONSENSUS, F_MASTER_VRP, F_MASTER_SKIPLIST, N_VRP, N_SKIPLIST, F_ROOT_CRT, F_SERVER_KEY, F_SERVER_CRT, F_PEER_CANDIDATES, \
     PEER_TIMEOUT, PEER_POLL_INTERVAL, N_PEER_LIST, PEER_RETRIES
 
 cons_threshold = 1
 peers = set()
+last_modified = {}
 current_vrps = {}
 current_skiplists = {}
-self_ip = ""
+self_ips = {"localhost", "127.0.0.1"}
 
 
 def main():
@@ -44,12 +46,28 @@ def fetch_from_peers(peer_addrs: Iterable[str], resource: str, is_json: bool = F
     output = {}
     for peer_addr in peer_addrs:
         url = f"https://{peer_addr}/{resource}"
+
         for retry in range(PEER_RETRIES):
             try:
-                r = requests.get(url, headers={"User-Agent": "ByzRPKI Peer"}, timeout=PEER_TIMEOUT, verify=F_ROOT_CRT, cert=(F_SERVER_CRT, F_SERVER_KEY))
+                headers = {"User-Agent": "ByzRP Peer"}
+                try:
+                    headers["If-Modified-Since"] = last_modified[peer_addr][resource]
+                except KeyError:
+                    pass
+
+                r = requests.get(url, headers=headers, timeout=PEER_TIMEOUT, verify=F_ROOT_CRT, cert=(F_SERVER_CRT, F_SERVER_KEY))
                 r.raise_for_status()
-                output[peer_addr] = r.json() if is_json else {line.strip() for line in r.text.split("\n") if line.strip() != ""}
-                log(__file__, f"fetched {url}{f' (retry {retry})' if retry else ''}")
+
+                if r.status_code == 304:
+                    output[peer_addr] = current_vrps[peer_addr]
+                    log(__file__, f"{url} unmodified{f' (retry {retry})' if retry else ''}")
+                else:
+                    output[peer_addr] = r.json() if is_json else {line.strip() for line in r.text.split("\n") if line.strip() != ""}
+                    log(__file__, f"fetched {url}{f' (retry {retry})' if retry else ''}")
+
+                    if r.headers.get("Last-Modified"):
+                        last_modified.setdefault(peer_addr, {})
+                        last_modified[peer_addr][resource] = r.headers.get("Last-Modified")
                 break
 
             except (Timeout, ConnectionError, SSLError, HTTPError, RequestException, JSONDecodeError) as e:
@@ -90,7 +108,7 @@ def discover_peers(bootstrap_list: Set[str]) -> Set[str]:
     confirmed_peers = set()
     new_peers = {peer for peer in bootstrap_list}
     while new_peers:
-        found_peers = {new_peer for peerlist in fetch_from_peers(new_peers - {self_ip, "localhost", "127.0.0.1"}, N_PEER_LIST, is_json=False).values() for new_peer in peerlist} - {"localhost", "127.0.0.1"}
+        found_peers = {new_peer for peerlist in fetch_from_peers(new_peers - self_ips, N_PEER_LIST, is_json=False).values() for new_peer in peerlist} - self_ips
         confirmed_peers = confirmed_peers.union(new_peers.intersection(found_peers))
         new_peers = found_peers - confirmed_peers
 
@@ -110,6 +128,8 @@ def read_peer_req_ips() -> Set[str]:
 
 
 if __name__ == '__main__':
-    self_ip = get_self_ip()
+    host_ip = get_host_ip()
+    self_ip = os.getenv("SELF_IP") or host_ip
+    self_ips = self_ips.union({self_ip, host_ip})
     peers = set(read_lines(F_PEER_LIST)).union({self_ip})
     main()

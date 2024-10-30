@@ -5,7 +5,7 @@ from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.inet6 import IPv6
 from scapy.sendrecv import sniff
 
-from utils import write_json, get_self_ip
+from utils import write_json, get_host_ip
 from vars import F_BL_DNSBOOK, F_BL_CONN_STATE, SNIFF_IFACE
 
 dnsbook = {}
@@ -62,5 +62,5 @@ def pkt_sniffer(iface, filter):
 
 
 if __name__ == "__main__":
-    self_ip = get_self_ip()
+    self_ip = get_host_ip()
     pkt_sniffer(SNIFF_IFACE, "udp port 53 or tcp[tcpflags] & (tcp-syn|tcp-fin|tcp-rst) != 0")

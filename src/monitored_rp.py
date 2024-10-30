@@ -8,7 +8,7 @@ from time import sleep
 import psutil
 
 from blacklist import crash_detection, stalling_detection, update_skiplist, find_pid
-from utils import log, read_json, write_json, RPKI_OBJTYPES, get_self_ip
+from utils import log, read_json, write_json, RPKI_OBJTYPES, get_host_ip
 from vars import TALS, D_RP_CACHE, D_RP_OUT, RP_TIMEOUT, F_MASTER_SKIPLIST, RP_POLL_INTERVAL, VALIDATION_INTERVAL, F_VRP
 
 RPKI_CMD = f"rpki-client -v -j -m -s {RP_TIMEOUT} -S {F_MASTER_SKIPLIST} -d %s -t %s {D_RP_OUT}"
@@ -42,7 +42,7 @@ def kill_proc(name: str):
 
 if __name__ == "__main__":
     # start_time = time()  # afridos -------------
-    start_index = int(get_self_ip().split(".")[-1]) % len(TALS)
+    start_index = int(get_host_ip().split(".")[-1]) % len(TALS)
     TALS = TALS[start_index:] + TALS[:start_index]
 
     for tal_cache in (D_RP_CACHE / tal.name.rstrip(".tal") for tal in TALS):

@@ -1,9 +1,10 @@
 import json
 import subprocess
 from datetime import datetime
-from json import JSONDecodeError
 from pathlib import Path
 from typing import Union, Iterable, Set
+
+from json import JSONDecodeError
 
 PathLike = Union[str, Path]
 RPKI_OBJTYPES = ["roas", "aspas", "bgpsec_keys"]
@@ -44,5 +45,5 @@ def log(src: str, text: str):
     print(f"{datetime.now().isoformat()}\t{src}\t{text}")
 
 
-def get_self_ip() -> str:
+def get_host_ip() -> str:
     return subprocess.check_output(["hostname", "-i"], text=True).strip()

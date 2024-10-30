@@ -11,7 +11,7 @@ while True:
         for line in f_in:
             ip = line.strip()
 
-            if re.match("[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}", ip):
+            if re.match("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}", ip):
                 if not F_PEER_CANDIDATES.exists():
                     seen = set()
 

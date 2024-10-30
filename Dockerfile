@@ -18,19 +18,25 @@ ENV SNIFF_IFACE=eth0
 ENV PEER_RETRIES=3
 ENV STALLING_THRESHOLD=0.9
 
+ENV SELF_IP=""
+
 ENV D_DATA=/data/
 ENV D_IN=$D_DATA/in/
 ENV D_OUT=$D_DATA/out/
-ENV D_METRICS=$D_OUT/metrics/
 ENV D_RP_OUT=$D_OUT/rpki-out/
 ENV D_RP_CACHE=$D_OUT/rpki-cache/
 ENV D_RP_TALS=$D_IN/rpki-tals/
 ENV D_SHARE=$D_OUT/share/
+ENV D_METRICS=$D_SHARE/metrics/
 ENV D_CERTS=/etc/ssl/certs/
 ENV D_KEYS=/etc/ssl/private/
-ENV F_SERVER_CRT=$D_CERTS/server.crt
 ENV F_ROOT_CRT=$D_CERTS/root.crt
+ENV F_SERVER_CRT=$D_CERTS/server.crt
 ENV F_SERVER_KEY=$D_KEYS/server.key
+ENV F_RTR_CRT=$F_SERVER_CRT
+ENV F_RTR_KEY=$F_SERVER_KEY
+#ENV F_RTR_CRT=$D_CERTS/rtr.crt
+#ENV F_RTR_KEY=$D_KEYS/rtr.key
 ENV N_VRP=vrp.json
 ENV N_MASTER_VRP=master-vrp.json
 ENV N_SKIPLIST=skiplist.lst
@@ -51,11 +57,12 @@ ENV F_BL_CONN_STATE=/tmp/conn_state.json
 RUN mkdir -p $D_RP_OUT $D_RP_CACHE $D_RP_TALS $D_SHARE $D_METRICS
 RUN chmod 777 $D_RP_OUT
 RUN ln -sf $D_RP_OUT/metrics $D_METRICS/rpki-client.metrics
+RUN touch $F_SKIPLIST $F_MASTER_SKIPLIST && echo '{}' > $F_VRP && echo '{}' > $F_MASTER_VRP
 RUN echo '{}' > $F_MASTER_VRP && echo '{}' > $F_VRP && echo '{}' > $F_BL_CONN_STATE && echo '{}' > $F_BL_DNSBOOK && echo '{}' > $F_BL_SKIPLIST_STATE && touch $F_MASTER_SKIPLIST
 
 #stayrtr
 COPY --from=rpki/stayrtr /stayrtr /bin/stayrtr
-RUN printf "#!/usr/bin/env bash\nstayrtr -bind 0.0.0.0:8282 -cache http://localhost/$N_MASTER_VRP -metrics.path $D_METRICS/stayrtr.metrics > /dev/stdout 2> /dev/stderr &\n" > /root/stayrtr.sh && chmod +x /root/stayrtr.sh
+RUN printf "#!/usr/bin/env bash\nstayrtr -bind '' -tls.bind 0.0.0.0:8282 -tls.key $F_RTR_KEY -tls.cert $F_RTR_CRT -cache http://localhost/$N_MASTER_VRP -metrics.path $D_METRICS/stayrtr.metrics > /dev/stdout 2> /dev/stderr &\n" > /root/stayrtr.sh && chmod +x /root/stayrtr.sh
 
 #rpki-client
 RUN apt install -y curl rsync build-essential libssl-dev libtls-dev
