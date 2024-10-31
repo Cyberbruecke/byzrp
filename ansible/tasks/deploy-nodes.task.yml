@@ -4,35 +4,69 @@
     path: /opt/byzrp/
     state: directory
 
-- name: Copy peer list to nodes
+- name: Copy peer list to {{ ansible_host }}
   copy:
     src: prep/peers.lst
     dest: /opt/byzrp/peers.lst
 
-- name: Copy root certificate to nodes
+- name: Copy root certificate to {{ ansible_host }}
   copy:
     src: "prep/root.crt"
     dest: /opt/byzrp/root.crt
 
-- name: Copy keys to nodes
+- name: Copy server key to {{ ansible_host }}
   copy:
     src: "prep/{{ ansible_host }}.key"
     dest: /opt/byzrp/server.key
 
-- name: Copy certificates to nodes
+- name: Copy server certificate to {{ ansible_host }}
   copy:
     src: "prep/{{ ansible_host }}.crt"
     dest: /opt/byzrp/server.crt
 
-- name: Copy Docker image to nodes
+- name: Check for 'rtr.key'
+  stat:
+    path: prep/rtr.key
+  register: rtr_key
+
+- name: Check for 'rtr.crt'
+  stat:
+    path: prep/rtr.crt
+  register: rtr_crt
+
+- name: Copy global RTR key to {{ ansible_host }}
+  copy:
+    src: prep/rtr.key
+    dest: /opt/byzrp/rtr.key
+  when: rtr_key.stat.exists and rtr_crt.stat.exists
+
+- name: Copy global RTR certificate to {{ ansible_host }}
+  copy:
+    src: prep/rtr.crt
+    dest: /opt/byzrp/rtr.crt
+  when: rtr_key.stat.exists and rtr_crt.stat.exists
+
+- name: Copy individual RTR key to {{ ansible_host }}
+  copy:
+    src: "prep/{{ ansible_host }}.key"
+    dest: /opt/byzrp/rtr.key
+  when: not (rtr_key.stat.exists and rtr_crt.stat.exists)
+
+- name: Copy individual RTR certificate to {{ ansible_host }}
+  copy:
+    src: "prep/{{ ansible_host }}.crt"
+    dest: /opt/byzrp/rtr.crt
+  when: not (rtr_key.stat.exists and rtr_crt.stat.exists)
+
+- name: Copy Docker image to {{ ansible_host }}
   copy:
     src: prep/byzrp.img
     dest: /opt/byzrp/byzrp.img
 
-- name: Load docker image
+- name: Load docker image on {{ ansible_host }}
   command: docker load -i /opt/byzrp/byzrp.img
 
-- name: Run Docker container
+- name: Run Docker container on {{ ansible_host }}
   docker_container:
     name: byzrp
     image: byzrp
@@ -44,6 +78,8 @@
     volumes:
       - /opt/byzrp/server.crt:/etc/ssl/certs/server.crt
       - /opt/byzrp/server.key:/etc/ssl/private/server.key
+      - /opt/byzrp/rtr.crt:/etc/ssl/certs/rtr.crt
+      - /opt/byzrp/rtr.key:/etc/ssl/private/rtr.key
       - /opt/byzrp/root.crt:/etc/ssl/certs/root.crt
       - /opt/byzrp/peers.lst:/data/out/share/peers.lst
     env:
