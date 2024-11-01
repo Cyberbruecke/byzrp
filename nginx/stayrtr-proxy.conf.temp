@@ -4,6 +4,6 @@ server {
     server_name localhost;
     location /${N_MASTER_VRP} {
         root ${D_SHARE};
-        add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
+        add_header 'Cache-Control' 'public, max-age=0, must-revalidate';
     }
 }

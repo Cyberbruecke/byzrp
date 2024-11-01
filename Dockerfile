@@ -17,6 +17,7 @@ ENV PEER_POLL_INTERVAL=10
 ENV SNIFF_IFACE=eth0
 ENV PEER_RETRIES=3
 ENV STALLING_THRESHOLD=0.9
+ENV RTR_REFRESH=30
 
 ENV SELF_IP=""
 
@@ -60,7 +61,6 @@ RUN echo '{}' > $F_MASTER_VRP && echo '{}' > $F_VRP && echo '{}' > $F_BL_CONN_ST
 
 #stayrtr
 COPY --from=rpki/stayrtr /stayrtr /bin/stayrtr
-RUN printf "#!/usr/bin/env bash\nstayrtr -bind '' -tls.bind 0.0.0.0:8282 -tls.key $F_RTR_KEY -tls.cert $F_RTR_CRT -cache http://localhost/$N_MASTER_VRP -metrics.path $D_METRICS/stayrtr.metrics > /dev/stdout 2> /dev/stderr &\n" > /root/stayrtr.sh && chmod +x /root/stayrtr.sh
 
 #rpki-client
 RUN apt install -y curl rsync build-essential libssl-dev libtls-dev
@@ -92,4 +92,13 @@ RUN pip3 install --break-system-packages -r /app/requirements.txt
 EXPOSE 8282
 EXPOSE 443
 
-CMD ln -sf /proc/1/fd/1 /dev/stdout && ln -sf /proc/1/fd/2 /dev/stderr && cd /app/ && python3 vars.py && (python3 ip_reader.py &) && nginx -t && service nginx start && /root/stayrtr.sh && (python3 -u monitored_rp.py &) && python3 -u peering.py
+CMD ln -sf /proc/1/fd/1 /dev/stdout && \
+    ln -sf /proc/1/fd/2 /dev/stderr && \
+    cd /app/ && \
+    python3 vars.py && \
+    (python3 ip_reader.py &) && \
+    nginx -t && \
+    service nginx start && \
+    (stayrtr -bind '' -tls.bind 0.0.0.0:8282 -tls.key $F_RTR_KEY -tls.cert $F_RTR_CRT -cache http://localhost/$N_MASTER_VRP -refresh $RTR_REFRESH &) && \
+    (python3 -u monitored_rp.py &) && \
+    python3 -u peering.py

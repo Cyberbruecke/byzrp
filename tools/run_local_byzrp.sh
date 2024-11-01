@@ -22,7 +22,7 @@ for ((i=1; i<=N; i++)); do
     cp $IP.crt $IP.rtr.crt
     cp $IP.key $IP.rtr.key
     echo "running byz$i"
-    docker run -d -v $PWD/$IP.crt:/etc/ssl/certs/server.crt -v $PWD/$IP.rtr.crt:/etc/ssl/certs/rtr.crt -v $PWD/$IP.key:/etc/ssl/private/server.key -v $PWD/$IP.rtr.key:/etc/ssl/private/rtr.key -v $PWD/root.crt:/etc/ssl/certs/root.crt -v $PWD/peers.lst:/data/out/share/peers.lst --name byz$i $IMG > /dev/null 2> /dev/null
+    docker run -d --rm -v $PWD/$IP.crt:/etc/ssl/certs/server.crt -v $PWD/$IP.rtr.crt:/etc/ssl/certs/rtr.crt -v $PWD/$IP.key:/etc/ssl/private/server.key -v $PWD/$IP.rtr.key:/etc/ssl/private/rtr.key -v $PWD/root.crt:/etc/ssl/certs/root.crt -v $PWD/peers.lst:/data/out/share/peers.lst --name byz$i $IMG #> /dev/null 2> /dev/null
     echo "adding $IP to peer.lst"
     printf "$IP\n" >> peers.lst
 done

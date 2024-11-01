@@ -86,7 +86,7 @@ def aggregate_master_vrp(peer_vrps: dict) -> dict:
             for entry_str in {json.dumps(entry) for entry in vrp.get(objtype, [])}:
                 vote[objtype][entry_str] = vote[objtype].get(entry_str, 0) + 1
 
-    master_vrp = {"metadata": {"buildtime": datetime.now().isoformat()}}
+    master_vrp = {"metadata": {"buildtime": datetime.now().astimezone().isoformat()}}
     master_vrp.update({objtype: [json.loads(entry_str) for entry_str, votes in entries.items() if votes >= cons_threshold] for objtype, entries in vote.items()})
     n_uniq_entries = sum(len(entries) for entries in vote.values())
     n_cons_entries = sum(votes >= cons_threshold for entries in vote.values() for votes in entries.values())
