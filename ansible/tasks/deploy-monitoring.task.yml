@@ -9,16 +9,6 @@
     src: prep/prometheus.yml
     dest: /opt/byzrp-mon/prometheus.yml
 
-- name: Copy Grafana password file
-  copy:
-    src: prep/grafana.passwd
-    dest: /opt/byzrp-mon/grafana.passwd
-
-- name: Copy Grafana datasources config
-  copy:
-    src: ../prometheus/datasources.yml
-    dest: /opt/byzrp-mon/datasources.yml
-
 - name: Copy root certificate to nodes
   copy:
     src: "prep/root.crt"
