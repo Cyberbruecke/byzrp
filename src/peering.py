@@ -18,7 +18,7 @@ peers = set()
 last_modified = {}
 current_vrps = {}
 current_skiplists = {}
-self_ips = {"localhost", "127.0.0.1"}
+self_ips = {"localhost", "127.0.0.1", "172.17.0.1"}
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
         sleep(PEER_POLL_INTERVAL)
 
         if PEER_DISCOVERY:
-            peers = peers.union(discover_peers(peers.union(read_peer_req_ips()))) - {"localhost", "127.0.0.1"}
+            peers = peers.union(discover_peers(peers.union(read_peer_req_ips()))) - self_ips
             write_lines(peers, filename=F_PEER_LIST)
             cons_threshold = floor(CONSENSUS * len(peers)) + 1
 

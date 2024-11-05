@@ -84,4 +84,5 @@
       - /opt/byzrp/peers.lst:/data/out/share/peers.lst
     env:
       SELF_IP: "{{ ansible_host }}"
+      PEER_DISCOVERY: "0"
     detach: true
