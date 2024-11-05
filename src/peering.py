@@ -59,7 +59,6 @@ def fetch_from_peers(peer_addrs: Iterable[str], resource: str, is_json: bool = F
                 r.raise_for_status()
 
                 if r.status_code == 304:
-                    output[peer_addr] = current_vrps[peer_addr]
                     log(__file__, f"{url} unmodified{f' (retry {retry})' if retry else ''}")
                 else:
                     output[peer_addr] = r.json() if is_json else {line.strip() for line in r.text.split("\n") if line.strip() != ""}
