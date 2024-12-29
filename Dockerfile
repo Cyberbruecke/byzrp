@@ -2,7 +2,7 @@ FROM ubuntu:latest
 RUN apt update && apt upgrade -y && apt autoremove -y
 
 #python
-RUN apt install -y python3 python3-pip
+RUN apt install curl python3 python3-pip wget git gcc npm gnupg2 apt-transport-https software-properties-common supervisor -y
 
 #vars
 ENV PEER_DISCOVERY=1
@@ -52,6 +52,9 @@ ENV F_BL_DNSBOOK=/tmp/dnsbook.json
 ENV F_BL_SKIPLIST_STATE=/tmp/skiplist_state.json
 ENV F_BL_CONN_STATE=/tmp/conn_state.json
 
+ENV PROMETHEUS_VERSION=3.0.1
+ENV NODE_EXPORTER_VERSION=1.8.2
+
 #init
 RUN mkdir -p $D_RP_OUT $D_RP_CACHE $D_RP_TALS $D_SHARE $D_METRICS
 RUN chmod 777 $D_RP_OUT
@@ -66,12 +69,13 @@ COPY --from=rpki/stayrtr /stayrtr /bin/stayrtr
 RUN apt install -y curl rsync build-essential libssl-dev libtls-dev
 RUN touch /etc/rsyncd.conf
 RUN curl https://ftp.openbsd.org/pub/OpenBSD/rpki-client/$(curl https://ftp.openbsd.org/pub/OpenBSD/rpki-client/ | egrep -o "rpki-client-[0-9.]+.tar.gz" | tail -n 1) -o /root/rpki-client.tar.gz
-RUN cd /root/ && tar -xzvf rpki-client.tar.gz && cd /root/rpki-client-* && ./configure && make && rm /root/rpki-client.tar.gz
+RUN cd /root/ && tar -xzvf rpki-client.tar.gz && cd /root/rpki-client-* && ./configure --with-output-dir=$D_RP_OUT && make && rm /root/rpki-client.tar.gz
 RUN useradd _rpki-client && passwd -d _rpki-client
 RUN ln -s /root/rpki-client-*/src/rpki-client /bin/rpki-client
 RUN cp /root/rpki-client-*/*.tal $D_RP_TALS
 RUN chown -R _rpki-client:_rpki-client $D_RP_OUT $D_RP_TALS $D_RP_CACHE
 RUN curl https://www.arin.net/resources/manage/rpki/arin.tal -o $D_RP_TALS/arin.tal
+RUN touch /data/out/rpki-out/metrics && chmod 644 /data/out/rpki-out/*
 
 #nginx
 RUN apt install -y nginx gettext
@@ -84,21 +88,34 @@ RUN sed -i 's/user www-data;/user root;/' /etc/nginx/nginx.conf
 RUN sed -i 's/http {/http {\n\tlog_format peer_ip_log '\$remote_addr';\n\taccess_log \/tmp\/peer_ip_log peer_ip_log;/' /etc/nginx/nginx.conf
 RUN mkfifo $F_PEER_IP_LOG
 
+# prometheus
+RUN wget https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz \
+    && tar -xvzf prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz \
+    && mv prometheus-${PROMETHEUS_VERSION}.linux-amd64 /prometheus \
+    && rm prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
+COPY prometheus/prometheus.yml /prometheus/prometheus.yml 
+RUN chmod +x /prometheus/prometheus && chmod 644 /prometheus/prometheus.yml
+
+# node_exporter
+RUN wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz \
+    && tar -xvzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz \
+    && mv node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64 /node_exporter \
+    && rm node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
+RUN chmod +x /node_exporter/node_exporter
+RUN ln -s /data/out/rpki-out/metrics /node_exporter/metrics.prom
+
 #app
 RUN apt install -y libpcap-dev lsof
 COPY src/ /app/
 RUN pip3 install --break-system-packages -r /app/requirements.txt
+COPY boot_services.sh /boot_services.sh
+RUN chmod +x /boot_services.sh
+
 
 EXPOSE 8282
+EXPOSE 9090
+EXPOSE 9100
 EXPOSE 443
 
-CMD ln -sf /proc/1/fd/1 /dev/stdout && \
-    ln -sf /proc/1/fd/2 /dev/stderr && \
-    cd /app/ && \
-    python3 vars.py && \
-    (python3 ip_reader.py &) && \
-    nginx -t && \
-    service nginx start && \
-    (stayrtr -bind '' -tls.bind 0.0.0.0:8282 -tls.key $F_RTR_KEY -tls.cert $F_RTR_CRT -cache http://localhost/$N_MASTER_VRP -refresh $RTR_REFRESH &) && \
-    (python3 -u monitored_rp.py &) && \
-    python3 -u peering.py
+CMD ["/boot_services.sh"]
+

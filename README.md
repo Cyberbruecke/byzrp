@@ -1,6 +1,6 @@
 # Byzantine Secure Relying Party for Resilient RPKI
 
-The code in this repository is based on a paper published at ACM CCS 2024: [The Paper](https://arxiv.org/pdf/2405.00531)
+The code in this repository is based on a paper published at ACM CCS 2024: [The Paper](https://dl.acm.org/doi/pdf/10.1145/3658644.3690368)
 
 ## 1. Description
 

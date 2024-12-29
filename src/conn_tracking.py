@@ -63,4 +63,4 @@ def pkt_sniffer(iface, filter):
 
 if __name__ == "__main__":
     self_ip = get_host_ip()
-    pkt_sniffer(SNIFF_IFACE, "udp port 53 or tcp[tcpflags] & (tcp-syn|tcp-fin|tcp-rst) != 0")
+    pkt_sniffer(SNIFF_IFACE, "udp port 53 or (tcp-syn|tcp-fin|tcp-rst) != 0")
