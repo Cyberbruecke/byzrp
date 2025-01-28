@@ -3,7 +3,7 @@ import os
 import re
 from datetime import datetime
 from math import ceil
-from time import sleep
+from time import sleep, time
 from typing import Set, Iterable
 
 import requests
@@ -11,7 +11,7 @@ from requests.exceptions import Timeout, ConnectionError, HTTPError, JSONDecodeE
 
 from utils import write_lines, write_json, read_lines, log, get_host_ip, RPKI_OBJTYPES, write_metrics
 from vars import PEER_DISCOVERY, F_PEER_LIST, CONSENSUS, F_MASTER_VRP, F_MASTER_SKIPLIST, N_VRP, N_SKIPLIST, F_ROOT_CRT, F_SERVER_KEY, F_SERVER_CRT, F_PEER_CANDIDATES, \
-    PEER_TIMEOUT, PEER_POLL_INTERVAL, N_PEER_LIST, PEER_RETRIES, F_BYZRP_METRICS
+    PEER_TIMEOUT, PEER_POLL_INTERVAL, N_PEER_LIST, PEER_RETRIES, F_BYZRP_METRICS, INIT_PEERING_DELAY
 
 cons_threshold = 1
 peers = set()
@@ -31,9 +31,12 @@ metrics["consensus_threshold"] = cons_threshold
 def main():
     global peers, cons_threshold
 
+    last_round_start = (int(time() / 60) + 1) * 60 + INIT_PEERING_DELAY
     log(__file__, "running")
     while True:
-        sleep(PEER_POLL_INTERVAL)
+        while time() < last_round_start + PEER_POLL_INTERVAL:
+            sleep(0.5)
+        last_round_start += PEER_POLL_INTERVAL
 
         if PEER_DISCOVERY:
             peers = peers.union(discover_peers(peers.union(read_peer_req_ips())))

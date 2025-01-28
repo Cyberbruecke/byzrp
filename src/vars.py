@@ -37,6 +37,7 @@ try:
     PEER_TIMEOUT = int(os.environ["PEER_TIMEOUT"])
     PEER_TIMEOUT = None if PEER_TIMEOUT < 0 else PEER_TIMEOUT
     PEER_POLL_INTERVAL = int(os.environ["PEER_POLL_INTERVAL"])
+    INIT_PEERING_DELAY = int(os.environ["INIT_PEERING_DELAY"])
     SNIFF_IFACE = os.environ["SNIFF_IFACE"]
     PEER_RETRIES = int(os.environ["PEER_RETRIES"])
     STALLING_THRESHOLD = float(os.environ["STALLING_THRESHOLD"])

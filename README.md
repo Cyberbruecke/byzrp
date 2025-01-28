@@ -32,7 +32,6 @@ Example command:
 rtrdump -type tls -connect www.byzrp.net:8282
 ```
 
-
 ## 3. Setup
 
 ### Local Deployment
@@ -56,8 +55,16 @@ Then run the following playbooks to provision, build and run the remote hosts. T
 ansible-playbook -i ansible/hosts.yml ansible/setup-hosts.playbook.yml
 ansible-playbook -i ansible/hosts.yml ansible/deploy.playbook.yml
 ```
-
 To stop ByzRP, run:
 ```
 ansible-playbook -i ansible/hosts.yml ansible/shutdown.playbook.yml
 ```
+
+## 4. Notes
+- `PEER_POLL_INTERVAL` should be a divisor of 60
+- `INIT_PEERING_DELAY` should be a multiple of `PEER_POLL_INTERVAL`
+
+### Testing RTR
+- `pip install rpki-rtr-client`
+- `rtr_client -h <container IP> -p 8282`
+- note: does not support RTR-over-TLS
