@@ -101,6 +101,7 @@ def aggregate_master_vrp(peer_vrps: dict) -> dict:
     master_vrp = {"metadata": {"buildtime": datetime.now().astimezone().isoformat()}}
     master_vrp.update({objtype: [json.loads(entry_str) for entry_str, votes in entries.items() if votes >= cons_threshold] for objtype, entries in vote.items()})
 
+    metrics.update({f"{obtype}": len(entries) for obtype, entries in peer_vrps.get(self_ip, {}).items()})
     metrics.update({f"union_{obtype}": len(entries) for obtype, entries in vote.items()})
     metrics.update({f"consensus_{objtype}": sum(votes >= cons_threshold for votes in entries.values()) for objtype, entries in vote.items()})
     metrics.update({f"intersection_{objtype}": sum(votes >= len(peers) for votes in entries.values()) for objtype, entries in vote.items()})
@@ -108,7 +109,7 @@ def aggregate_master_vrp(peer_vrps: dict) -> dict:
                     f"union_all_obj": sum(metrics[f"union_{objtype}"] for objtype in RPKI_OBJTYPES),
                     f"intersection_all_obj": sum(metrics[f"intersection_{objtype}"] for objtype in RPKI_OBJTYPES)})
     for objtype in RPKI_OBJTYPES + ["all_obj"]:
-        log(__file__, f"updated master VRP (found {metrics[f'union_{objtype}']} unique entries ({objtype}) among peers, {metrics[f'cons_{objtype}']} with {cons_threshold}+ votes)")
+        log(__file__, f"updated master VRP (found {metrics[f'union_{objtype}']} unique entries ({objtype}) among peers, {metrics[f'consensus_{objtype}']} with {cons_threshold}+ votes)")
 
     return master_vrp
 
