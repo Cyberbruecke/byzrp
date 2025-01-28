@@ -9,17 +9,17 @@
     src: prep/prometheus.yml
     dest: /opt/byzrp-mon/prometheus.yml
 
-- name: Copy root certificate to nodes
+- name: Copy root certificate
   copy:
     src: "prep/root.crt"
     dest: /opt/byzrp-mon/root.crt
 
-- name: Copy keys to nodes
+- name: Copy key
   copy:
     src: "prep/{{ ansible_host }}.key"
     dest: /opt/byzrp-mon/client.key
 
-- name: Copy certificates to nodes
+- name: Copy certificate
   copy:
     src: "prep/{{ ansible_host }}.crt"
     dest: /opt/byzrp-mon/client.crt

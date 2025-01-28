@@ -24,7 +24,7 @@ metrics = {metric: 0 for metric in RPKI_OBJTYPES +
                                    [f"intersection_{objtype}" for objtype in RPKI_OBJTYPES] +
                                    [f"consensus_{objtype}" for objtype in RPKI_OBJTYPES] +
                                    ["all_obj", "union_all_obj", "intersection_all_obj", "consensus_all_obj"] +
-                                   ["peers", "skiplisted", "union_skiplisted", "consensus_skiplisted"]}
+                                   ["peers", "skiplisted", "intersection_skiplisted", "union_skiplisted", "consensus_skiplisted"]}
 metrics["consensus_threshold"] = cons_threshold
 
 
@@ -101,10 +101,11 @@ def aggregate_master_vrp(peer_vrps: dict) -> dict:
     master_vrp = {"metadata": {"buildtime": datetime.now().astimezone().isoformat()}}
     master_vrp.update({objtype: [json.loads(entry_str) for entry_str, votes in entries.items() if votes >= cons_threshold] for objtype, entries in vote.items()})
 
-    metrics.update({f"{obtype}": len(entries) for obtype, entries in peer_vrps.get(self_ip, {}).items()})
+    metrics.update({objtype: len(peer_vrps.get(self_ip, {}).get(objtype, [])) for objtype in RPKI_OBJTYPES})
     metrics.update({f"union_{obtype}": len(entries) for obtype, entries in vote.items()})
     metrics.update({f"consensus_{objtype}": sum(votes >= cons_threshold for votes in entries.values()) for objtype, entries in vote.items()})
     metrics.update({f"intersection_{objtype}": sum(votes >= len(peers) for votes in entries.values()) for objtype, entries in vote.items()})
+    metrics.update({"all_obj": sum(metrics[objtype] for objtype in RPKI_OBJTYPES)})
     metrics.update({f"consensus_all_obj": sum(metrics[f"consensus_{objtype}"] for objtype in RPKI_OBJTYPES),
                     f"union_all_obj": sum(metrics[f"union_{objtype}"] for objtype in RPKI_OBJTYPES),
                     f"intersection_all_obj": sum(metrics[f"intersection_{objtype}"] for objtype in RPKI_OBJTYPES)})
@@ -124,6 +125,7 @@ def aggregate_master_skiplist(peer_skiplists: dict) -> Set[str]:
     metrics["skiplisted"] = len(set(peer_skiplists.get(self_ip, [])))
     metrics["union_skiplisted"] = len(vote)
     metrics["consensus_skiplisted"] = len(master_list)
+    metrics["intersection_skiplisted"] = len({domain for domain, votes in vote.items() if votes >= len(peers)})
 
     log(__file__, f"updated master skiplist (found {len(vote)} unique entries, {len(master_list)} with {cons_threshold}+ votes)")
     return master_list

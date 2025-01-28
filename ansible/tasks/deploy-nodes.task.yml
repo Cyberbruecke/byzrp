@@ -4,22 +4,22 @@
     path: /opt/byzrp/
     state: directory
 
-- name: Copy peer list to {{ ansible_host }}
+- name: Copy peer list
   copy:
     src: prep/peers.lst
     dest: /opt/byzrp/peers.lst
 
-- name: Copy root certificate to {{ ansible_host }}
+- name: Copy root certificate
   copy:
     src: "prep/root.crt"
     dest: /opt/byzrp/root.crt
 
-- name: Copy server key to {{ ansible_host }}
+- name: Copy server key
   copy:
     src: "prep/{{ ansible_host }}.key"
     dest: /opt/byzrp/server.key
 
-- name: Copy server certificate to {{ ansible_host }}
+- name: Copy server certificate
   copy:
     src: "prep/{{ ansible_host }}.crt"
     dest: /opt/byzrp/server.crt
@@ -34,31 +34,31 @@
     path: prep/rtr.crt
   register: rtr_crt
 
-- name: Copy global RTR key to {{ ansible_host }}
+- name: Copy global RTR key
   copy:
     src: prep/rtr.key
     dest: /opt/byzrp/rtr.key
   when: rtr_key.stat.exists and rtr_crt.stat.exists
 
-- name: Copy global RTR certificate to {{ ansible_host }}
+- name: Copy global RTR certificate
   copy:
     src: prep/rtr.crt
     dest: /opt/byzrp/rtr.crt
   when: rtr_key.stat.exists and rtr_crt.stat.exists
 
-- name: Copy individual RTR key to {{ ansible_host }}
+- name: Copy individual RTR key
   copy:
     src: "prep/{{ ansible_host }}.key"
     dest: /opt/byzrp/rtr.key
   when: not (rtr_key.stat.exists and rtr_crt.stat.exists)
 
-- name: Copy individual RTR certificate to {{ ansible_host }}
+- name: Copy individual RTR certificate
   copy:
     src: "prep/{{ ansible_host }}.crt"
     dest: /opt/byzrp/rtr.crt
   when: not (rtr_key.stat.exists and rtr_crt.stat.exists)
 
-- name: Copy Docker image to {{ ansible_host }}
+- name: Copy Docker image
   copy:
     src: prep/byzrp.img
     dest: /opt/byzrp/byzrp.img

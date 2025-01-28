@@ -8,6 +8,8 @@
     - import_tasks: tasks/install-docker.task.yml
     - import_tasks: tasks/configure-docker.task.yml
     - import_tasks: tasks/install-docker-python.task.yml
+  handlers:
+    - import_tasks: handlers/restart-docker.task.yml
 
 - name: Install Docker Compose
   hosts: mon

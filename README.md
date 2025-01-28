@@ -68,3 +68,6 @@ ansible-playbook -i ansible/hosts.yml ansible/shutdown.playbook.yml
 - `pip install rpki-rtr-client`
 - `rtr_client -h <container IP> -p 8282`
 - note: does not support RTR-over-TLS
+
+### Testing with Curl
+- e.g. `curl --cacert root.crt --cert client.crt --key client.key https://<address>/metrics/byzrp.metrics`
