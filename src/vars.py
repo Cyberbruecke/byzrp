@@ -25,6 +25,7 @@ try:
     F_BL_DNSBOOK = Path(os.environ["F_BL_DNSBOOK"])
     F_BL_SKIPLIST_STATE = Path(os.environ["F_BL_SKIPLIST_STATE"])
     F_BL_CONN_STATE = Path(os.environ["F_BL_CONN_STATE"])
+    F_BYZRP_METRICS = Path(os.environ["F_BYZRP_METRICS"])
 
     CONSENSUS = float(os.environ["CONSENSUS"])
     PEER_DISCOVERY = bool(int(os.environ["PEER_DISCOVERY"]))

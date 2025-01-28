@@ -11,12 +11,12 @@ server {
     ssl_verify_client on;
 
     location /metrics/stayrtr.metrics {
-        add_header 'Cache-Control' 'public, max-age=0, must-revalidate';
+        add_header 'Cache-Control' 'public, max-age=${PEER_POLL_INTERVAL}, must-revalidate';
         proxy_pass http://localhost:9847/metrics;
     }
 
     location / {
         root ${D_SHARE};
-        add_header 'Cache-Control' 'public, max-age=0, must-revalidate';
+        add_header 'Cache-Control' 'public, max-age=${PEER_POLL_INTERVAL}, must-revalidate';
     }
 }

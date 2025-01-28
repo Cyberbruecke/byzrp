@@ -51,6 +51,7 @@ ENV F_PEER_CANDIDATES=/tmp/peer_candidates
 ENV F_BL_DNSBOOK=/tmp/dnsbook.json
 ENV F_BL_SKIPLIST_STATE=/tmp/skiplist_state.json
 ENV F_BL_CONN_STATE=/tmp/conn_state.json
+ENV F_BYZRP_METRICS=$D_METRICS/byzrp.metrics
 
 ENV PROMETHEUS_VERSION=3.0.1
 ENV NODE_EXPORTER_VERSION=1.8.2

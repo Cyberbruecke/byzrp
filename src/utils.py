@@ -23,6 +23,22 @@ def write_lines(data: Iterable[str], filename: PathLike):
         f.write("\n".join(data) + "\n")
 
 
+def write_metrics(metrics: dict, filename: PathLike):
+    with open(filename, "w") as f:
+        for metric_name, count in metrics.items():
+            f.write(f"# HELP {metric_name} {help_from_metric_name(metric_name)}\n"
+                    f"# TYPE {metric_name} counter\n"
+                    f"{metric_name} {count}\n\n")
+
+
+def help_from_metric_name(metric_name: str) -> str:
+    if any(metric_name.startswith(count_type) for count_type in ["union", "intersection", "consensus"]):
+        count_type, obj_type = metric_name.split("_", maxsplit=1)
+        return f"Number of {obj_type} in {count_type} of nodes"
+    else:
+        return f"Number of {metric_name} seen by this node"
+
+
 def read_json(filename: PathLike) -> dict:
     try:
         with open(filename) as f:
