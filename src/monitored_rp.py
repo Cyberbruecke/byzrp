@@ -41,7 +41,6 @@ def kill_proc(name: str):
 
 
 if __name__ == "__main__":
-    # start_time = time()  # afridos -------------
     start_index = int(get_host_ip().split(".")[-1]) % len(TALS)
     TALS = TALS[start_index:] + TALS[:start_index]
 
@@ -60,15 +59,6 @@ if __name__ == "__main__":
 
             log(__file__, f"polling RP in {RP_POLL_INTERVAL} sec intervals...")
             while True:
-
-                # afridos -------------
-                # if time() > start_time + 1 and "afrinic" in tal.name:
-                #     sleep(2)
-                #     log(__file__, f"AFRIDOS: killing rpki-client for {tal}")
-                #     for proc in psutil.process_iter():
-                #         if "rpki-client" in proc.name():
-                #             proc.kill()
-
                 start_t = datetime.timestamp(datetime.now())
                 skiplist = stalling_detection(start_t)
                 if skiplist:

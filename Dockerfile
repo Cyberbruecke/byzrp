@@ -1,8 +1,6 @@
 FROM ubuntu:latest
-RUN apt update && apt upgrade -y && apt autoremove -y
-
-#python
-RUN apt install curl python3 python3-pip wget git gcc npm gnupg2 apt-transport-https software-properties-common supervisor -y
+#upgrade & python
+RUN apt update && apt upgrade -y && apt autoremove -y && apt install -y curl python3 python3-pip
 
 #vars
 ENV PEER_DISCOVERY=1
@@ -54,8 +52,6 @@ ENV F_BL_SKIPLIST_STATE=/tmp/skiplist_state.json
 ENV F_BL_CONN_STATE=/tmp/conn_state.json
 ENV F_BYZRP_METRICS=$D_METRICS/byzrp.metrics
 
-ENV PROMETHEUS_VERSION=3.0.1
-ENV NODE_EXPORTER_VERSION=1.8.2
 
 #init
 RUN mkdir -p $D_RP_OUT $D_RP_CACHE $D_RP_TALS $D_SHARE $D_METRICS
@@ -90,34 +86,22 @@ RUN sed -i 's/user www-data;/user root;/' /etc/nginx/nginx.conf
 RUN sed -i 's/http {/http {\n\tlog_format peer_ip_log '\$remote_addr';\n\taccess_log \/tmp\/peer_ip_log peer_ip_log;/' /etc/nginx/nginx.conf
 RUN mkfifo $F_PEER_IP_LOG
 
-# prometheus
-RUN wget https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz \
-    && tar -xvzf prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz \
-    && mv prometheus-${PROMETHEUS_VERSION}.linux-amd64 /prometheus \
-    && rm prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz
-COPY prometheus/prometheus.yml /prometheus/prometheus.yml 
-RUN chmod +x /prometheus/prometheus && chmod 644 /prometheus/prometheus.yml
-
-# node_exporter
-RUN wget https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz \
-    && tar -xvzf node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz \
-    && mv node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64 /node_exporter \
-    && rm node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz
-RUN chmod +x /node_exporter/node_exporter
-RUN ln -s /data/out/rpki-out/metrics /node_exporter/metrics.prom
 
 #app
 RUN apt install -y libpcap-dev lsof
 COPY src/ /app/
 RUN pip3 install --break-system-packages -r /app/requirements.txt
-COPY boot_services.sh /boot_services.sh
-RUN chmod +x /boot_services.sh
-
 
 EXPOSE 8282
-EXPOSE 9090
-EXPOSE 9100
 EXPOSE 443
 
-CMD ["/boot_services.sh"]
-
+CMD ln -sf /proc/1/fd/1 /dev/stdout && \
+    ln -sf /proc/1/fd/2 /dev/stderr && \
+    cd /app/ && \
+    python3 vars.py && \
+    (python3 ip_reader.py &) && \
+    nginx -t && \
+    service nginx start && \
+    (stayrtr -bind '' -tls.bind 0.0.0.0:8282 -tls.key $F_RTR_KEY -tls.cert $F_RTR_CRT -cache http://localhost/$N_MASTER_VRP -refresh $RTR_REFRESH &) && \
+    (python3 -u monitored_rp.py &) && \
+    python3 -u peering.py
