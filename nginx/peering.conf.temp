@@ -15,8 +15,14 @@ server {
         proxy_pass http://localhost:9847/metrics;
     }
 
-    location / {
-        root ${D_SHARE};
+    location ~ \.metrics$ {
+        default_type "text/plain; version=0.0.4";
         add_header 'Cache-Control' 'public, max-age=${PEER_POLL_INTERVAL}, must-revalidate';
+        root ${D_SHARE};
+    }
+
+    location / {
+        add_header 'Cache-Control' 'public, max-age=${PEER_POLL_INTERVAL}, must-revalidate';
+        root ${D_SHARE};
     }
 }
