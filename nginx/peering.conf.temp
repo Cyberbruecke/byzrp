@@ -10,7 +10,7 @@ server {
     ssl_client_certificate ${F_ROOT_CRT};
     ssl_verify_client on;
 
-    location /metrics/stayrtr.metrics {
+    location = /metrics/stayrtr.metrics {
         add_header 'Cache-Control' 'public, max-age=${PEER_POLL_INTERVAL}, must-revalidate';
         proxy_pass http://localhost:9847/metrics;
     }
